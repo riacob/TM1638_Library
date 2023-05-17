@@ -64,7 +64,7 @@ public:
      * @param idxOffset: The offset in the array from which to start printing. Useful for scrolling text. Default is null.
      * @param arrSize: The size of the character array. No need to specify this if you're working with a null-terminated string.
      */
-    void setDigits(char* digitChars, size_t idxOffset = 0, size_t arrSize = 0);
+    void setDigits(char* digitChars, bool arrInvert = false, size_t idxOffset = 0,  size_t arrSize = 0);
     /**
      * @brief Sets the dot state of the given digit.
      * 
@@ -76,6 +76,20 @@ public:
      * @brief Writes charBuf and dotBuf. Call this when you're done editing the buffers.
      */
     void writeBuf();
+    /**
+     * @brief Gets the state of the button at keyIdx
+     * 
+     * @param keyIdx: The memory index of the button, 0-7.
+     * @return true if the button is pressed
+     * @return false if the button is not pressed
+     */
+    //bool getKey(uint8_t keyIdx);
+    /**
+     * @brief Gets the state of the buttons
+     * 
+     * @param getKeys: A bool array (size 8) that will contain the key states
+     */
+    void getKeys(bool* keyStates);
 };
 
 #endif

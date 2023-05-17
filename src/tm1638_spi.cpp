@@ -122,11 +122,6 @@ void TM1638_SPI::setDot(uint8_t digitIdx, bool dotState)
 
 void TM1638_SPI::writeBuf()
 {
-    for (int i = 0; i < 8; i++)
-    {
-        Serial.print((char)(digBuf[i] | dotBuf[i]));
-    }
-    Serial.println();
     sendByte(CMD_NORMAL_AUTOADDRESS_WRITE);
     // Send starting address to the beginning of the possible addresses bytes[0]
     // Then transfer digit buffer data and dot buffer data
@@ -134,7 +129,7 @@ void TM1638_SPI::writeBuf()
     sendBytes(bytes, 17);
 }
 
-void TM1638_SPI::setDigits(char *digitChars, size_t idxOffset, size_t arrSize)
+void TM1638_SPI::setDigits(char *digitChars, bool arrInvert, size_t idxOffset, size_t arrSize)
 {
     // If arrSize is equal to 0 the buffer should be considered as a string
     // If string find length (find null terminator)
@@ -145,7 +140,48 @@ void TM1638_SPI::setDigits(char *digitChars, size_t idxOffset, size_t arrSize)
             arrSize++;
         } while (digitChars[arrSize - 1] != 0);
     }
-    for (int i = 0; (i < 8) && (i+idxOffset < arrSize); i++) {
-        digBuf[i] = CharMap[digitChars[i+idxOffset]];
+    // If not inverting the array
+    if (!arrInvert)
+    {
+        for (int i = 0; (i < 8) && (i + idxOffset < arrSize); i++)
+        {
+            // Map the char to the digit's segment states
+            digBuf[i] = CharMap[digitChars[i + idxOffset]];
+        }
     }
+    // If inverting the array
+    else
+    {
+        int j = arrSize;
+        for (int i = 0; (i < 8) && (j > 0); i++)
+        {
+            // Map the char to the digit's segment states
+            // Why -2 don't ask but works
+            digBuf[i] = CharMap[digitChars[j + idxOffset - 2]];
+            j--;
+        }
+    }
+}
+
+void TM1638_SPI::getKeys(bool* keyStates)
+{
+    //keyStates[0][0];
+    //sendByte(CMD_NORMAL_AUTOADDRESS_READ);
+    //SPI.beginTransaction(SPISettings(1000000,LSBFIRST,SPI_MODE0));
+    digitalWrite(PIN_CS, LOW);
+    shiftOut(11,13,LSBFIRST,CMD_NORMAL_AUTOADDRESS_READ);
+    // Bits: row1_col3, row1_col2, row1_col1, null, row2_col3, row2_col2, row2_col1, null
+    uint8_t row1 = shiftIn(12,13,LSBFIRST);
+    // Bits: row3_col3, row3_col2, row3_col1, null, row4_col3, row4_col2, row4_col1, null
+    uint8_t row3 = shiftIn(12,13,LSBFIRST);
+    // Bits: row5_col3, row5_col2, row5_col1, null, row6_col3, row6_col2, row6_col1, null
+    uint8_t row5 = shiftIn(12,13,LSBFIRST);
+    // Bits: row7_col3, row7_col2, row7_col1, null, row8_col3, row8_col2, row8_col1, null
+    uint8_t row7 = shiftIn(12,13,LSBFIRST);
+    digitalWrite(PIN_CS, HIGH);
+    //SPI.endTransaction();
+    Serial.println(row1, BIN);
+    Serial.println(row3, BIN);
+    Serial.println(row5, BIN);
+    Serial.println(row7, BIN);
 }
